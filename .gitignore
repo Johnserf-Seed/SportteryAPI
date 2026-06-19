@@ -139,9 +139,6 @@ dist
 .wrangler/
 dist/
 
-# Real wrangler config holds your account's KV id — commit wrangler.jsonc.example instead
-wrangler.jsonc
-
 # Wrangler local secrets — KEEP OUT OF GIT (contains API_KEY)
 .dev.vars
 .dev.vars.*

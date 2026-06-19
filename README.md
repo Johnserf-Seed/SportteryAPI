@@ -2,7 +2,9 @@
 
 **English** · [简体中文](README.zh-CN.md)
 
-[![License: MIT](https://img.shields.io/badge/license-MIT-green)](LICENSE) ![TypeScript](https://img.shields.io/badge/TypeScript-3178C6?logo=typescript&logoColor=white) ![Cloudflare Workers](https://img.shields.io/badge/Cloudflare%20Workers-F38020?logo=cloudflare&logoColor=white) ![MCP](https://img.shields.io/badge/MCP-server-0098FF)
+[![CI](https://github.com/Johnserf-Seed/SportteryAPI/actions/workflows/ci.yml/badge.svg)](https://github.com/Johnserf-Seed/SportteryAPI/actions/workflows/ci.yml) [![License: MIT](https://img.shields.io/badge/license-MIT-green)](LICENSE) ![TypeScript](https://img.shields.io/badge/TypeScript-3178C6?logo=typescript&logoColor=white) ![Cloudflare Workers](https://img.shields.io/badge/Cloudflare%20Workers-F38020?logo=cloudflare&logoColor=white) ![MCP](https://img.shields.io/badge/MCP-server-0098FF)
+
+[![Deploy to Cloudflare](https://deploy.workers.cloudflare.com/button)](https://deploy.workers.cloudflare.com/?url=https://github.com/Johnserf-Seed/SportteryAPI)
 
 A **Cloudflare Worker REST API + local MCP server** that implements a clean,
 agent-callable 竞彩足球 (China Sports Lottery football) odds service. It serves the
@@ -98,8 +100,9 @@ SportteryAPI/
 ├── test/                    # 25 node:test unit tests (no network)
 ├── sample.json              # captured upstream payload (offline tests)
 ├── .env.example             # env-var template (MCP proxy / smoke key)
-├── wrangler.jsonc.example   # config template — copy to wrangler.jsonc
+├── wrangler.jsonc           # Worker config (committed; no secrets)
 ├── .mcp.json                # Claude Code project MCP registration
+├── .github/workflows/ci.yml # GitHub Actions: typecheck + tests on push/PR
 └── README.md / README.zh-CN.md
 ```
 
@@ -311,10 +314,15 @@ Set `SPORTTERY_PROXY` in `.env` if the host needs a proxy to reach sporttery.
 
 ## Deployment
 
+**One-click** — the [Deploy to Cloudflare](https://deploy.workers.cloudflare.com/?url=https://github.com/Johnserf-Seed/SportteryAPI)
+button (top of this README) forks the repo, sets up Workers Builds (auto-deploy on
+push = CD), and deploys. Compute endpoints work immediately; live odds need
+`UPSTREAM_PROXY` (below), and auth turns on once you set `API_KEY`.
+
+**CLI:**
 ```bash
 npx wrangler login
-cp wrangler.jsonc.example wrangler.jsonc                 # edit if needed
-echo "your-strong-key" | npx wrangler secret put API_KEY # enable auth (recommended)
+echo "your-strong-key" | npx wrangler secret put API_KEY  # enable auth (recommended)
 npm run deploy
 ```
 
@@ -324,8 +332,8 @@ For live odds from the global edge, set an upstream-reachable relay:
 npm run deploy
 ```
 Without `UPSTREAM_PROXY`, the deployed Worker is geo-blocked (`/api/matches` → 502);
-compute endpoints still work. `wrangler.jsonc` is git-ignored — commit
-`wrangler.jsonc.example`. Secrets live in `.dev.vars` / `wrangler secret put`.
+compute endpoints still work. `wrangler.jsonc` is committed (no secrets); secrets
+live in `.dev.vars` (local) / `wrangler secret put`.
 
 ---
 
@@ -388,6 +396,10 @@ npm run refresh-sample   # refresh sample.json from live upstream
 No build step: TypeScript runs via `node --experimental-strip-types`, and the
 Worker is bundled by Wrangler/esbuild. Pure modules use `.ts` import extensions so
 the same source works under `tsc`, esbuild, and Node type-stripping.
+
+**CI:** `.github/workflows/ci.yml` runs `typecheck` + `test` on every push and PR
+(Node 22). **CD:** the Deploy-to-Cloudflare button connects Workers Builds, which
+redeploys on every push to `main`.
 
 ---
 

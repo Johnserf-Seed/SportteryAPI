@@ -2,7 +2,9 @@
 
 [English](README.md) · **简体中文**
 
-[![License: MIT](https://img.shields.io/badge/license-MIT-green)](LICENSE) ![TypeScript](https://img.shields.io/badge/TypeScript-3178C6?logo=typescript&logoColor=white) ![Cloudflare Workers](https://img.shields.io/badge/Cloudflare%20Workers-F38020?logo=cloudflare&logoColor=white) ![MCP](https://img.shields.io/badge/MCP-server-0098FF)
+[![CI](https://github.com/Johnserf-Seed/SportteryAPI/actions/workflows/ci.yml/badge.svg)](https://github.com/Johnserf-Seed/SportteryAPI/actions/workflows/ci.yml) [![License: MIT](https://img.shields.io/badge/license-MIT-green)](LICENSE) ![TypeScript](https://img.shields.io/badge/TypeScript-3178C6?logo=typescript&logoColor=white) ![Cloudflare Workers](https://img.shields.io/badge/Cloudflare%20Workers-F38020?logo=cloudflare&logoColor=white) ![MCP](https://img.shields.io/badge/MCP-server-0098FF)
+
+[![Deploy to Cloudflare](https://deploy.workers.cloudflare.com/button)](https://deploy.workers.cloudflare.com/?url=https://github.com/Johnserf-Seed/SportteryAPI)
 
 一个 **Cloudflare Worker REST API + 本地 MCP 服务**,实现一个干净、可被 agent 调用的
 竞彩足球赔率服务。它提供**最新赔率**,并**纯粹基于赔率推导**一切——隐含/去水概率、
@@ -91,8 +93,9 @@ SportteryAPI/
 ├── test/                    # 25 个 node:test 单元测试（无网络）
 ├── sample.json              # 抓取的上游样本（离线测试用）
 ├── .env.example             # 环境变量模板（MCP 代理 / smoke key）
-├── wrangler.jsonc.example   # 配置模板——复制为 wrangler.jsonc
+├── wrangler.jsonc           # Worker 配置（已提交；无密钥)
 ├── .mcp.json                # Claude Code 项目级 MCP 注册
+├── .github/workflows/ci.yml # GitHub Actions：push/PR 跑 typecheck + 测试
 └── README.md / README.zh-CN.md
 ```
 
@@ -288,9 +291,13 @@ claude mcp add sporttery-odds -- \
 
 ## 部署
 
+**一键部署** —— README 顶部的 [Deploy to Cloudflare](https://deploy.workers.cloudflare.com/?url=https://github.com/Johnserf-Seed/SportteryAPI)
+按钮会 fork 仓库、配好 Workers Builds(push 即自动部署 = CD)并部署。计算端点立即可用;
+实时赔率需要 `UPSTREAM_PROXY`(见下),设置 `API_KEY` 后开启鉴权。
+
+**CLI:**
 ```bash
 npx wrangler login
-cp wrangler.jsonc.example wrangler.jsonc                  # 按需编辑
 echo "你的强密钥" | npx wrangler secret put API_KEY        # 开启鉴权（推荐）
 npm run deploy
 ```
@@ -301,7 +308,7 @@ npm run deploy
 npm run deploy
 ```
 不设 `UPSTREAM_PROXY` 时,部署后的 Worker 会被封锁(`/api/matches` → 502);计算端点照常可用。
-`wrangler.jsonc` 已 gitignore——提交 `wrangler.jsonc.example`。密钥放在 `.dev.vars` / `wrangler secret put`。
+`wrangler.jsonc` 已提交(无密钥);密钥放在 `.dev.vars`(本地)/ `wrangler secret put`。
 
 ---
 
@@ -358,6 +365,9 @@ npm run refresh-sample   # 从线上上游刷新 sample.json
 ```
 
 无构建步骤:TypeScript 经 `node --experimental-strip-types` 运行,Worker 由 Wrangler/esbuild 打包。
+
+**CI:** `.github/workflows/ci.yml` 在每次 push / PR 上跑 `typecheck` + `test`(Node 22)。
+**CD:** Deploy-to-Cloudflare 按钮接入 Workers Builds,每次 push 到 `main` 自动重新部署。
 
 ---
 

@@ -1,0 +1,28 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "sporttery-api",
+  "main": "src/index.ts",
+  "compatibility_date": "2025-11-01",
+  "compatibility_flags": ["nodejs_compat"],
+  "observability": {
+    "enabled": true
+  },
+
+  // --- Future direction: real-time odds stream over WebSocket -------------
+  // "durable_objects": {
+  //   "bindings": [{ "name": "ODDS_STREAM", "class_name": "OddsStream" }]
+  // },
+  // "migrations": [
+  //   { "tag": "v1", "new_sqlite_classes": ["OddsStream"] }
+  // ],
+  // "triggers": { "crons": ["*/1 * * * *"] },
+
+  "vars": {
+    "DEFAULT_POOLS": "hhad,had,crs,ttg,hafu",
+    "CACHE_TTL_SECONDS": "30"
+    // ,"UPSTREAM_PROXY": "https://my-relay.example/"
+  }
+
+  // Auth secret (enable with): echo "your-key" | npx wrangler secret put API_KEY
+  // Local dev: put API_KEY=... in .dev.vars
+}
