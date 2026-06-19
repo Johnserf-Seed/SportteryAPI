@@ -1,0 +1,42 @@
+{
+  // ──────────────────────────────────────────────────────────────────────────
+  // TEMPLATE — copy this file to `wrangler.jsonc` (the real one is git-ignored).
+  //   cp wrangler.jsonc.example wrangler.jsonc
+  // Secrets (API_KEY) live in `.dev.vars` / `wrangler secret put`, never here.
+  // ──────────────────────────────────────────────────────────────────────────
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "sporttery-api",
+  "main": "src/index.ts",
+  "compatibility_date": "2025-11-01",
+  "compatibility_flags": ["nodejs_compat"],
+  "observability": {
+    "enabled": true
+  },
+
+  // --- Future direction: real-time odds stream over WebSocket -------------
+  // Enable the OddsStream Durable Object (src/stream.ts) to fan out odds-diffs.
+  // "durable_objects": {
+  //   "bindings": [{ "name": "ODDS_STREAM", "class_name": "OddsStream" }]
+  // },
+  // "migrations": [
+  //   { "tag": "v1", "new_sqlite_classes": ["OddsStream"] }
+  // ],
+  // "triggers": { "crons": ["*/1 * * * *"] },
+
+  "vars": {
+    // Default pools returned by /api/matches when no ?pools is given.
+    // (The Worker always fetches all pools, so any ?pools subset still works.)
+    "DEFAULT_POOLS": "hhad,had,crs,ttg,hafu",
+    // Seconds to cache an upstream response (per-colo Cache API).
+    "CACHE_TTL_SECONDS": "30"
+    // Required in production to reach sporttery from the geo-blocked edge: a
+    // forwarding-proxy URL prefix pointing at a relay that can reach the upstream.
+    // The full upstream URL is appended to it. Leave unset when the runtime can
+    // reach the upstream directly (e.g. local dev).
+    // ,"UPSTREAM_PROXY": "https://my-relay.example/"
+  }
+
+  // API_KEY is a SECRET, not a var. Set it to enable auth on /api/* and /stream:
+  //   echo "key1,key2" | npx wrangler secret put API_KEY
+  // Locally, put `API_KEY=...` in .dev.vars. Unset = auth disabled.
+}

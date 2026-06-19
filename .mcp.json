@@ -1,0 +1,8 @@
+{
+  "mcpServers": {
+    "sporttery-odds": {
+      "command": "node",
+      "args": ["--no-warnings", "--experimental-strip-types", "mcp/server.ts"]
+    }
+  }
+}
