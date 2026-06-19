@@ -2,6 +2,8 @@
 
 **English** · [简体中文](README.zh-CN.md)
 
+[![License: MIT](https://img.shields.io/badge/license-MIT-green)](LICENSE) ![TypeScript](https://img.shields.io/badge/TypeScript-3178C6?logo=typescript&logoColor=white) ![Cloudflare Workers](https://img.shields.io/badge/Cloudflare%20Workers-F38020?logo=cloudflare&logoColor=white) ![MCP](https://img.shields.io/badge/MCP-server-0098FF)
+
 A **Cloudflare Worker REST API + local MCP server** that implements a clean,
 agent-callable 竞彩足球 (China Sports Lottery football) odds service. It serves the
 **latest odds** and **derives everything purely from those odds** — implied &

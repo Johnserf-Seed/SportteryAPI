@@ -2,6 +2,8 @@
 
 [English](README.md) · **简体中文**
 
+[![License: MIT](https://img.shields.io/badge/license-MIT-green)](LICENSE) ![TypeScript](https://img.shields.io/badge/TypeScript-3178C6?logo=typescript&logoColor=white) ![Cloudflare Workers](https://img.shields.io/badge/Cloudflare%20Workers-F38020?logo=cloudflare&logoColor=white) ![MCP](https://img.shields.io/badge/MCP-server-0098FF)
+
 一个 **Cloudflare Worker REST API + 本地 MCP 服务**,实现一个干净、可被 agent 调用的
 竞彩足球赔率服务。它提供**最新赔率**,并**纯粹基于赔率推导**一切——隐含/去水概率、
 返还率、真实赔率、相对参考的凯利指数/价值,以及完整的单关/过关奖金计算。
