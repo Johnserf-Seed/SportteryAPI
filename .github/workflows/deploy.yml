@@ -1,0 +1,35 @@
+name: Deploy
+
+# CD — deploy to Cloudflare Workers after CI passes on main.
+# Requires the CLOUDFLARE_API_TOKEN repo secret (Settings → Secrets and variables
+# → Actions). If your token is scoped to multiple accounts, also add
+# CLOUDFLARE_ACCOUNT_ID and pass it below.
+on:
+  workflow_run:
+    workflows: ["CI"]
+    types: [completed]
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    # Deploy only when CI succeeded (or when triggered manually).
+    if: ${{ github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success' }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+
+      - run: npm ci
+
+      - name: Deploy to Cloudflare Workers
+        uses: cloudflare/wrangler-action@v3
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          # accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}   # uncomment if needed
+          command: deploy

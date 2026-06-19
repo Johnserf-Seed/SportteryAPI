@@ -95,7 +95,7 @@ SportteryAPI/
 ├── .env.example             # 环境变量模板（MCP 代理 / smoke key）
 ├── wrangler.jsonc           # Worker 配置（已提交；无密钥)
 ├── .mcp.json                # Claude Code 项目级 MCP 注册
-├── .github/workflows/ci.yml # GitHub Actions：push/PR 跑 typecheck + 测试
+├── .github/workflows/       # CI（typecheck+测试）+ Deploy（CD 到 Cloudflare)
 └── README.md / README.zh-CN.md
 ```
 
@@ -367,7 +367,8 @@ npm run refresh-sample   # 从线上上游刷新 sample.json
 无构建步骤:TypeScript 经 `node --experimental-strip-types` 运行,Worker 由 Wrangler/esbuild 打包。
 
 **CI:** `.github/workflows/ci.yml` 在每次 push / PR 上跑 `typecheck` + `test`(Node 22)。
-**CD:** Deploy-to-Cloudflare 按钮接入 Workers Builds,每次 push 到 `main` 自动重新部署。
+**CD:** `.github/workflows/deploy.yml` 在 `main` 上 CI 通过后自动部署到 Cloudflare Workers
+(需要仓库密钥 `CLOUDFLARE_API_TOKEN`)。Deploy-to-Cloudflare 按钮(Workers Builds)是另一种选择。
 
 ---
 

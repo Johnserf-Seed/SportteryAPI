@@ -102,7 +102,7 @@ SportteryAPI/
 ├── .env.example             # env-var template (MCP proxy / smoke key)
 ├── wrangler.jsonc           # Worker config (committed; no secrets)
 ├── .mcp.json                # Claude Code project MCP registration
-├── .github/workflows/ci.yml # GitHub Actions: typecheck + tests on push/PR
+├── .github/workflows/       # CI (typecheck+test) + Deploy (CD to Cloudflare)
 └── README.md / README.zh-CN.md
 ```
 
@@ -398,8 +398,9 @@ Worker is bundled by Wrangler/esbuild. Pure modules use `.ts` import extensions 
 the same source works under `tsc`, esbuild, and Node type-stripping.
 
 **CI:** `.github/workflows/ci.yml` runs `typecheck` + `test` on every push and PR
-(Node 22). **CD:** the Deploy-to-Cloudflare button connects Workers Builds, which
-redeploys on every push to `main`.
+(Node 22). **CD:** `.github/workflows/deploy.yml` deploys to Cloudflare Workers
+after CI passes on `main` (needs the `CLOUDFLARE_API_TOKEN` repo secret). The
+Deploy-to-Cloudflare button (Workers Builds) is an alternative.
 
 ---
 
