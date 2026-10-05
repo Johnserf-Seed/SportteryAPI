@@ -19,22 +19,16 @@ test("SPORTTERY_PROXY routes the MCP client's fetch through an undici ProxyAgent
     res.writeHead(200, { "Content-Type": "application/json" });
     res.end(JSON.stringify({ ok: true }));
   });
+  const targetPort = await listen(target);
 
-  // Minimal forward proxy: CONNECT tunnels plus absolute-form requests.
-  const proxied: string[] = [];
+  // Minimal CONNECT proxy (undici's ProxyAgent tunnels every request). It is
+  // pinned to the local target and never dials a caller-supplied address.
+  const requested: string[] = [];
   const tunnels = new Set<net.Socket>();
-  const proxy = http.createServer((req, res) => {
-    proxied.push(`${req.method} ${req.url}`);
-    const upstream = http.request(req.url!, { method: req.method, headers: req.headers }, (r) => {
-      res.writeHead(r.statusCode ?? 502, r.headers);
-      r.pipe(res);
-    });
-    req.pipe(upstream);
-  });
+  const proxy = http.createServer((_req, res) => res.writeHead(405).end());
   proxy.on("connect", (req, socket: net.Socket, head) => {
-    proxied.push(`CONNECT ${req.url}`);
-    const [host, port] = (req.url ?? "").split(":");
-    const upstream = net.connect(Number(port), host, () => {
+    requested.push(req.url ?? "");
+    const upstream = net.connect(targetPort, "127.0.0.1", () => {
       socket.write("HTTP/1.1 200 Connection Established\r\n\r\n");
       upstream.write(head);
       upstream.pipe(socket);
@@ -43,8 +37,6 @@ test("SPORTTERY_PROXY routes the MCP client's fetch through an undici ProxyAgent
     upstream.on("error", () => socket.destroy());
     tunnels.add(socket).add(upstream);
   });
-
-  const targetPort = await listen(target);
   const proxyPort = await listen(proxy);
   process.env.SPORTTERY_PROXY = `http://127.0.0.1:${proxyPort}`;
 
@@ -63,5 +55,5 @@ test("SPORTTERY_PROXY routes the MCP client's fetch through an undici ProxyAgent
   const res = await fetch(`http://127.0.0.1:${targetPort}/odds`, { dispatcher } as RequestInit);
   assert.equal(res.status, 200);
   assert.deepEqual(await res.json(), { ok: true });
-  assert.ok(proxied.length > 0, "the request should have gone through the proxy");
+  assert.deepEqual([...new Set(requested)], [`127.0.0.1:${targetPort}`], "the request should tunnel through the proxy");
 });
