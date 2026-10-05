@@ -21,7 +21,7 @@
 
 - **面向 agent**:JSON 进 / JSON 出、开放 CORS、自描述的 `/api/meta`、可选的 **API Key 鉴权**,
   外加一个把同等能力作为工具暴露的本地 **MCP 服务**。
-- **纯函数、已测试**:全部推导/过关逻辑都在零依赖模块里,配 25 个单元测试,无需构建(`npm test`)。
+- **纯函数、已测试**:全部推导/过关逻辑都在零依赖模块里,配有单元测试,无需构建(`npm test`)。
 - **简洁数据通道**:每数据中心 Cache → 上游(可选经 `UPSTREAM_PROXY` 转发中继)。本地 MCP
   服务直连上游。
 
@@ -60,7 +60,7 @@
 
 ```bash
 npm install
-npm test                  # 25 个单元测试（推导/解析/过关/标签），无网络
+npm test                  # 单元测试（推导/解析/过关/标签/鉴权），无网络
 npm run dev               # wrangler dev → http://localhost:8787
 curl http://localhost:8787/api/matches | jq '.data.matches[0]'
 ```
@@ -90,7 +90,7 @@ SportteryAPI/
 │   ├── smoke.ts             # REST 冒烟测试（BASE=… node …）
 │   ├── mcp-smoke.ts         # MCP stdio 冒烟测试（npm run mcp:smoke）
 │   └── refresh-sample.ts    # 刷新 sample.json（npm run refresh-sample）
-├── test/                    # 25 个 node:test 单元测试（无网络）
+├── test/                    # node:test 单元测试（无网络）
 ├── sample.json              # 抓取的上游样本（离线测试用）
 ├── .env.example             # 环境变量模板（MCP 代理 / smoke key）
 ├── wrangler.jsonc           # Worker 配置（已提交；无密钥)
@@ -243,6 +243,7 @@ Body:`{ "offered":[2.10,3.40,3.80], "reference":[2.00,3.50,4.00], "labels":["主
 - 单注金额 = **2 元**;单关 = `2 × 倍数 × 赔率`;M串N 每注 = `2 × 倍数 × Π(赔率)`。
 - "M串N" 的注数(`bets`)= 所选 fold 尺寸上的 `Σ C(M, size)`。
 - 单张彩票封顶 **5,000,000 元**;混合过关最大关数 = 所选玩法里最小的关数限制(木桶原则;had/hhad = 8,crs/ttg/hafu = 6)。
+- 计算器单次最多接受 **15 条** 选项(竞彩本身最多 8 关),超出返回 `400`,以限制 `C(M, size)` 组合枚举的规模。
 
 | 场数 M | 玩法（label → 注数） |
 |---|---|
@@ -356,7 +357,7 @@ npm run deploy
 ## 开发与测试
 
 ```bash
-npm test           # 25 个单元测试（node:test，无网络）
+npm test           # 单元测试（node:test，无网络）
 npm run typecheck  # tsc --noEmit，覆盖 src/
 npm run dev        # 本地 Worker
 npm run mcp:smoke  # MCP 服务冒烟测试

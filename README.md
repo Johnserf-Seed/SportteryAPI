@@ -24,7 +24,7 @@ and full 单关/过关 (parlay) prize calculation.
 - **Agent-first.** JSON in / JSON out, open CORS, self-describing `/api/meta`,
   optional **API-key auth**, plus a local **MCP server** exposing the same power.
 - **Pure, tested math.** All derivation/parlay logic lives in dependency-free
-  modules with 25 unit tests — no build step (`npm test`).
+  modules with unit tests — no build step (`npm test`).
 - **Simple data path.** Per-colo Cache → upstream (optionally through an
   upstream-reachable relay via `UPSTREAM_PROXY`). The local MCP server fetches sporttery directly.
 
@@ -66,7 +66,7 @@ TypeScript with no build step).
 
 ```bash
 npm install
-npm test                  # 25 unit tests (math/parse/parlay/labels), no network
+npm test                  # unit tests (math/parse/parlay/labels/auth), no network
 npm run dev               # wrangler dev → http://localhost:8787
 curl http://localhost:8787/api/matches | jq '.data.matches[0]'
 ```
@@ -97,7 +97,7 @@ SportteryAPI/
 │   ├── smoke.ts             # REST smoke test                       (BASE=… node …)
 │   ├── mcp-smoke.ts         # MCP stdio smoke test                  (npm run mcp:smoke)
 │   └── refresh-sample.ts    # refresh sample.json                   (npm run refresh-sample)
-├── test/                    # 25 node:test unit tests (no network)
+├── test/                    # node:test unit tests (no network)
 ├── sample.json              # captured upstream payload (offline tests)
 ├── .env.example             # env-var template (MCP proxy / smoke key)
 ├── wrangler.jsonc           # Worker config (committed; no secrets)
@@ -263,6 +263,8 @@ return rate), so `/api/value` requires a **reference** odds set.
 - 注数 (`bets`) for an "M串N" = `Σ C(M, size)` over its boxed fold sizes.
 - 单张彩票封顶 **5,000,000 元**; 混合过关 max 关数 = the smallest per-play limit
   (木桶原则; had/hhad = 8, crs/ttg/hafu = 6).
+- The calculator accepts at most **15 legs** per request (竞彩 itself caps at 8);
+  more is rejected with `400`, which keeps the `C(M, size)` enumeration bounded.
 
 | 场数 M | 玩法 (label → 注数) |
 |---|---|
@@ -385,7 +387,7 @@ out odds-diffs to WebSocket clients. To enable: uncomment the `durable_objects`,
 ## Development & testing
 
 ```bash
-npm test           # 25 unit tests (node:test, no network)
+npm test           # unit tests (node:test, no network)
 npm run typecheck  # tsc --noEmit over src/
 npm run dev        # local Worker
 npm run mcp:smoke  # MCP server smoke test
