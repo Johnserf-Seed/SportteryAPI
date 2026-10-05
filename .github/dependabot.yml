@@ -8,6 +8,13 @@ updates:
     # Security updates are not delayed by this.
     cooldown:
       default-days: 7
+    ignore:
+      # Stay on undici 6.x while we run on Node 22: its built-in fetch speaks
+      # undici 6's dispatcher API, and a newer ProxyAgent breaks the MCP proxy
+      # path ("fetch failed: invalid onRequestStart method", see #4). Revisit
+      # when moving to a Node line that bundles a newer undici.
+      - dependency-name: undici
+        update-types: ["version-update:semver-major"]
     groups:
       npm-minor-and-patch:
         update-types: [minor, patch]
