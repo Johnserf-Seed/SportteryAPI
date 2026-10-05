@@ -11,6 +11,13 @@ import { round } from "./derive.ts";
 
 export const UNIT_PRICE = 2;
 export const TICKET_CAP = 5_000_000;
+/**
+ * Max selections per calculation. 竞彩 itself tops out at 8 (8串247); the
+ * headroom keeps "M串1" usable beyond the canned table while bounding the
+ * C(M, k) enumeration below to 2^15 − 1 = 32,767 combinations. Unbounded, a
+ * ~300-byte body (24 legs, folds [12]) would allocate hundreds of MB.
+ */
+export const MAX_LEGS = 15;
 
 export interface ParlayVariant {
   label: string;
@@ -174,6 +181,7 @@ export function calcParlay(input: ParlayInput): ParlayResult {
   const legs = input.legs ?? [];
   const m = legs.length;
   if (m === 0) throw new Error("At least one leg is required");
+  if (m > MAX_LEGS) throw new Error(`At most ${MAX_LEGS} legs are supported (got ${m})`);
   const multiplier = input.multiplier ?? 1;
   if (!Number.isInteger(multiplier) || multiplier < 1) {
     throw new Error("multiplier (倍数) must be a positive integer");

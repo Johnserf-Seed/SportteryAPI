@@ -90,7 +90,12 @@ export async function fetchUpstreamDirect(pools: string, ttl: number, proxy?: st
   if (!res.ok) {
     throw new UpstreamError(502, `upstream responded ${res.status} (geo-block? set UPSTREAM_PROXY to an upstream-reachable relay)`);
   }
-  const data = (await res.json()) as any;
+  let data: any;
+  try {
+    data = await res.json();
+  } catch {
+    throw new UpstreamError(502, "upstream returned a non-JSON body (WAF challenge page?)");
+  }
   if (!isSportteryPayload(data) || data.success === false) {
     throw new UpstreamError(502, data?.errorMessage || "upstream returned an unexpected body");
   }

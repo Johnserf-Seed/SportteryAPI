@@ -4,7 +4,7 @@ import type { Env } from "./env.ts";
 import type { PoolCode } from "./types.ts";
 import { corsPreflight, fail, HttpError, ok, readJson } from "./http.ts";
 import { cacheTtlSeconds, getOdds, UpstreamError } from "./upstream.ts";
-import { isAuthorized } from "./auth.ts";
+import { authEnabled, isAuthorized } from "./auth.ts";
 import { parseUpstream } from "./parse.ts";
 import { compareOdds, deriveMarket, round } from "./derive.ts";
 import { calcParlay, listParlayTypes, PARLAY_TABLE, TICKET_CAP, UNIT_PRICE } from "./parlay.ts";
@@ -61,7 +61,9 @@ async function handleMatches(url: URL, env: Env, ctx: ExecutionContext): Promise
     matchId: parseMatchId(url.searchParams.get("matchId")),
   });
   result.source = source;
-  return ok(result, { "Cache-Control": `public, max-age=${cacheTtlSeconds(env)}` });
+  // Key-gated responses must stay out of shared caches, which would replay them to callers without a key.
+  const scope = authEnabled(env) ? "private" : "public";
+  return ok(result, { "Cache-Control": `${scope}, max-age=${cacheTtlSeconds(env)}` });
 }
 
 async function handleMatch(matchId: number, env: Env, ctx: ExecutionContext): Promise<Response> {
@@ -77,7 +79,7 @@ function deriveBody(body: any): Response {
   let keys: string[] | undefined;
   if (Array.isArray(body?.odds)) {
     odds = body.odds.map(Number);
-  } else if (body && ["h", "d", "a"].every((k) => k in body)) {
+  } else if (body && typeof body === "object" && ["h", "d", "a"].every((k) => k in body)) {
     odds = [Number(body.h), Number(body.d), Number(body.a)];
     keys = ["home", "draw", "away"];
   } else {
@@ -223,7 +225,8 @@ export default {
     } catch (e) {
       if (e instanceof HttpError) return fail(e.status, e.message, e.details);
       if (e instanceof UpstreamError) return fail(e.status, e.message);
-      return fail(500, "internal error", (e as Error).message);
+      console.error("unhandled error", e); // details go to Workers logs, not the client
+      return fail(500, "internal error");
     }
   },
 
