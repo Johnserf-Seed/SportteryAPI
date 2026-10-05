@@ -66,7 +66,7 @@ TypeScript with no build step).
 
 ```bash
 npm install
-npm test                  # unit tests (math/parse/parlay/labels/auth), no network
+npm test                  # unit tests (math/parse/parlay/labels/auth/mcp), no network
 npm run dev               # wrangler dev → http://localhost:8787
 curl http://localhost:8787/api/matches | jq '.data.matches[0]'
 ```

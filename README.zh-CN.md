@@ -60,7 +60,7 @@
 
 ```bash
 npm install
-npm test                  # 单元测试（推导/解析/过关/标签/鉴权），无网络
+npm test                  # 单元测试（推导/解析/过关/标签/鉴权/MCP），无网络
 npm run dev               # wrangler dev → http://localhost:8787
 curl http://localhost:8787/api/matches | jq '.data.matches[0]'
 ```
