@@ -30,6 +30,15 @@ function proxyUrl(): string {
     ""
   );
 }
+/** Proxy URL for logging, minus any user:pass credentials. */
+function redactProxy(proxy: string): string {
+  try {
+    const u = new URL(proxy);
+    return `${u.protocol}//${u.host}`;
+  } catch {
+    return "(invalid URL)";
+  }
+}
 async function getDispatcher(): Promise<any> {
   if (dispatcherPromise !== undefined) return dispatcherPromise;
   const proxy = proxyUrl();
@@ -39,7 +48,7 @@ async function getDispatcher(): Promise<any> {
   }
   dispatcherPromise = import("undici")
     .then(({ ProxyAgent }) => {
-      console.error(`[sporttery] using HTTP proxy ${proxy}`);
+      console.error(`[sporttery] using HTTP proxy ${redactProxy(proxy)}`);
       return new ProxyAgent(proxy);
     })
     .catch((e) => {

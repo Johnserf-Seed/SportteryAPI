@@ -1,6 +1,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import {
+  MAX_LEGS,
   PARLAY_TABLE,
   TICKET_CAP,
   calcParlay,
@@ -93,6 +94,15 @@ test("rejects non-integer fold sizes", () => {
   assert.throws(() =>
     calcParlay({ legs: [{ odds: 2 }, { odds: 2 }, { odds: 2 }], folds: [2.5] }),
   );
+});
+
+test("caps legs at MAX_LEGS so the C(M, k) enumeration stays bounded", () => {
+  const legs = (n: number) => Array.from({ length: n }, () => ({ odds: 2 }));
+  assert.equal(calcParlay({ legs: legs(MAX_LEGS) }).passType, `${MAX_LEGS}串1`);
+  const allFolds = Array.from({ length: MAX_LEGS }, (_, i) => i + 1);
+  assert.equal(calcParlay({ legs: legs(MAX_LEGS), folds: allFolds }).bets, 2 ** MAX_LEGS - 1); // worst case
+  assert.throws(() => calcParlay({ legs: legs(MAX_LEGS + 1) }), /At most/);
+  assert.throws(() => calcParlay({ legs: legs(24), folds: [12] }), /At most/); // was 2.7M combos
 });
 
 test("listParlayTypes(N) filters; 0 or out-of-range returns empty, no-arg returns the table", () => {
