@@ -20,7 +20,7 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
-  deploy:
+  check:
     runs-on: ubuntu-latest
     # Deploy only when CI succeeded for a push to main in this repo (or when
     # triggered manually). `branches: [main]` alone also matches fork PRs whose
@@ -30,11 +30,39 @@ jobs:
       (github.event.workflow_run.conclusion == 'success' &&
        github.event.workflow_run.event == 'push' &&
        github.event.workflow_run.head_repository.full_name == github.repository)
+    outputs:
+      sha: ${{ steps.tip.outputs.sha }}
+      deploy: ${{ steps.tip.outputs.deploy }}
+    steps:
+      # CI runs for back-to-back pushes can finish out of order, so a run only
+      # deploys if its commit is still the tip of main — otherwise an older
+      # commit could overwrite a newer release. main only moves forward (force
+      # pushes are blocked), so the tip's own run deploys it. This check runs
+      # inside the concurrency group, so it sees the latest tip.
+      - name: Skip commits that main has moved past
+        id: tip
+        env:
+          GH_TOKEN: ${{ github.token }}
+          # Deploy exactly the commit CI tested, not whatever main points to now.
+          SHA: ${{ github.event.workflow_run.head_sha || github.sha }}
+        run: |
+          echo "sha=$SHA" >> "$GITHUB_OUTPUT"
+          tip=$(gh api "repos/$GITHUB_REPOSITORY/commits/main" --jq .sha)
+          if [ "$GITHUB_EVENT_NAME" = workflow_dispatch ] || [ "$tip" = "$SHA" ]; then
+            echo "deploy=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "deploy=false" >> "$GITHUB_OUTPUT"
+            echo "::notice::Skipping ${SHA:0:7}: main has moved on to ${tip:0:7}, whose own run deploys it."
+          fi
+
+  deploy:
+    needs: check
+    if: needs.check.outputs.deploy == 'true'
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
-          # Deploy exactly the commit CI tested, not whatever main points to now.
-          ref: ${{ github.event.workflow_run.head_sha || github.sha }}
+          ref: ${{ needs.check.outputs.sha }}
           persist-credentials: false
 
       - name: Set up Node.js
