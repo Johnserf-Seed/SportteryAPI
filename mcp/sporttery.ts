@@ -39,7 +39,7 @@ function redactProxy(proxy: string): string {
     return "(invalid URL)";
   }
 }
-async function getDispatcher(): Promise<any> {
+export async function getDispatcher(): Promise<any> {
   if (dispatcherPromise !== undefined) return dispatcherPromise;
   const proxy = proxyUrl();
   if (!proxy) {
